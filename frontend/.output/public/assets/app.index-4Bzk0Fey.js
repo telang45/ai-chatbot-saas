@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-D8nDyRPw.js";import{a as t}from"./index-BuA30LfW.js";var n=e(),r=()=>(0,n.jsx)(t,{to:`/app/chat`});export{r as component};
