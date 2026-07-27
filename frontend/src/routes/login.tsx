@@ -12,25 +12,114 @@ export const Route = createFileRoute("/login")({ component: LoginPage });
 function LoginPage() {
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error || "Login failed");
+      }
+
+      const data = await res.json();
+      localStorage.setItem("token", data.access_token);
+      toast.success("Welcome back!");
+      navigate({ to: "/app/chat" });
+    } catch (err: any) {
+      toast.error(err.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthLayout title="Welcome back" subtitle="Log in to continue your conversations."
-      footer={<>Don't have an account? <Link to="/register" className="font-medium text-foreground hover:underline">Sign up</Link></>}>
-      <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setLoading(true); setTimeout(() => { toast.success("Welcome back!"); navigate({ to: "/app/chat" }); }, 700); }}>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Log in to continue your conversations."
+      footer={
+        <>
+          Don't have an account?{" "}
+          <Link to="/register" className="font-medium text-foreground hover:underline">
+            Sign up
+          </Link>
+        </>
+      }
+    >
+      <form className="space-y-4" onSubmit={handleLogin}>
         <div className="grid grid-cols-2 gap-2">
-          <Button type="button" variant="outline" className="rounded-full"><Github className="mr-2 h-4 w-4" /> GitHub</Button>
-          <Button type="button" variant="outline" className="rounded-full">Google</Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => (window.location.href = "http://localhost:8000/api/auth/github")}
+          >
+            <Github className="mr-2 h-4 w-4" /> GitHub
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => (window.location.href = "http://localhost:8000/api/auth/google")}
+          >
+            Google
+          </Button>
         </div>
-        <div className="relative py-2 text-center text-xs text-muted-foreground"><span className="relative bg-background px-2">or continue with email</span><div className="absolute inset-x-0 top-1/2 -z-0 h-px bg-border" /></div>
-        <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="you@company.com" required /></div>
+        <div className="relative py-2 text-center text-xs text-muted-foreground">
+          <span className="relative bg-background px-2">or continue with email</span>
+          <div className="absolute inset-x-0 top-1/2 -z-0 h-px bg-border" />
+        </div>
         <div className="space-y-2">
-          <div className="flex items-center justify-between"><Label htmlFor="pw">Password</Label><Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">Forgot?</Link></div>
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="pw">Password</Label>
+            <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">
+              Forgot?
+            </Link>
+          </div>
           <div className="relative">
-            <Input id="pw" type={show ? "text" : "password"} placeholder="••••••••" required />
-            <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">{show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
+            <Input
+              id="pw"
+              type={show ? "text" : "password"}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShow(!show)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
+              {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </div>
         </div>
-        <Button type="submit" className="w-full rounded-full" disabled={loading}>{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Log in"}</Button>
+        <Button type="submit" className="w-full rounded-full" disabled={loading}>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Log in"}
+        </Button>
       </form>
     </AuthLayout>
   );
